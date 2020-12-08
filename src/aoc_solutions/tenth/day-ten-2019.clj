@@ -9,7 +9,7 @@
   (reduce into [] (map #(clojure.string/split % #"") (clojure.string/split (slurp filename) #"\n"))))
 
 (defn get-asteroid-coordinates [grid asteroids]
-  "39 is the width and height of grid, 1522 = 1 + 39 * 39. useful to generate a range that equal to number of points on grid"
+  "39 is the width and height of grid, 1522 = 1 + 39 * 39. useful to generate a range that's equal to number of points on grid"
   (let [grid-area (count grid)
         dimension (int (Math/sqrt grid-area))]
     (map #(vector (rem % dimension) (quot % dimension)) (filter #(= "#" (get asteroids %)) (range 0 (inc grid-area))))))
@@ -107,15 +107,29 @@
         (let [to-remove (reduce (fn [a b] (min-distance base a b)) in-site)]
           (shoot-asteroids-down base angles (filter #(not (= to-remove %)) asteroids) (rem (inc current-angle) (count angles)) to-remove (inc c)))))))
 
-
-
 (defn second-part [base grid asteroids]
   (let [angles (sort (get-all-angles grid base))]
     (shoot-asteroids-down base angles asteroids 0 nil 0)))
 
-(defn ttest [filename grid-dimension target base]
-  (let [my-grid (grid (nth grid-dimension 0) (nth grid-dimension 0))
+(defn second-part [asteroids base angles last-killed current-angle kill-count]
+  (if (= 200 kill-count)
+    last-killed
+    (let [angle (nth angles current-angle)
+          killed (filter #(in-angle? base % angle) asteroids)]
+      (if (empty? killed)
+        (recur asteroids base angles last-killed (rem (inc current-angle) (count angles)) kill-count)
+        (let [killed-asteroid (reduce (fn [a b] (min-distance base a b)) killed)]
+          (recur (filter #(not= killed-asteroid %) asteroids) base angles killed-asteroid (rem (inc current-angle) (count angles)) (inc kill-count)))))))
+
+(defn a []
+  "I have this function to help with setup for calling second-part"
+  (let [filename "resources/day-ten-2019-input.txt"
+        base [26 29];from first part of this puzzle
         my-map (read-map filename)
-        asteroids (filter #(not (= % [26 29])) (get-asteroid-coordinates my-grid my-map))
-        angles (sort (get-all-angles my-grid base))]
-    (second-part base my-grid asteroids)))
+        my-grid (grid 39 39)
+        asteroids (filter #(not= base %) (get-asteroid-coordinates my-grid my-map))
+        angles (reverse (sort (get-all-angles asteroids base)))
+        starting-angle-index 209;of all angles sorted in reverse, 209th is noon o'clock angle. sorted in reverse, to rotate clock-wise
+        last-killed nil
+        kill-count 0]
+    (second-part asteroids base angles last-killed starting-angle-index kill-count)))

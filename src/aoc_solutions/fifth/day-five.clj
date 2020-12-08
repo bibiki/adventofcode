@@ -1,4 +1,3 @@
-
 (defn calc [op opnd1 opnd2]
   (if (= 1 op)
     (+ opnd1 opnd2)

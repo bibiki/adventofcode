@@ -151,6 +151,3 @@
 (defn file-as-seq
   [filename]
   (line-seq (clojure.java.io/reader filename)))
-
-
-
